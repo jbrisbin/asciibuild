@@ -1,0 +1,174 @@
+= Test Stage Block Processor
+Jon Brisbin <jbrisbin@basho.com>
+
+== Environment
+
+:version: 1.6.0
+:image: test-asciibuild:{version}
+:run: true
+
+.Variables
+* version = {version}
+* image = {image}
+* run = {run}
+
+== Before Build
+
+This defines the environment this build will run in. This always gets run, no matter what `ASCIIBUILD_SECTION` says.
+
+.Alpine Build
+[[alpine]]
+[source,Dockerfile]
+[asciibuild,Dockerfile,image={image}-alpine,build_opts="",run={run}]
+----
+FROM alpine
+RUN apk add --no-cache bash
+CMD /bin/cat
+----
+
+.Ubuntu Build
+[[ubuntu]]
+[source,Dockerfile]
+[asciibuild,Dockerfile,image={image}-ubuntu,build_opts="",run={run}]
+----
+FROM ubuntu
+RUN apt-get update && apt-get install -y python # <1>
+CMD /bin/cat
+----
+<1> Install needed utilities
+
+== Build
+
+This is the build section, which runs in container `{image}`.
+
+=== Test Bash
+
+This section tests running `bash` in an Alpine container.
+
+.Test bash Stage
+[source,bash]
+[asciibuild,bash,container="Alpine Build"]
+----
+echo OS: `uname -s`
+----
+
+=== Test Python
+
+This section tests running `python` in a Ubuntu container.
+
+.Test python Stage
+[source,python]
+[asciibuild,python,container="Ubuntu Build"]
+----
+import subprocess
+print "OS: "
+subprocess.call(["uname", "-s"])
+----
+
+=== Test Pyspark
+
+This section tests running `pyspark` outside of a container. Requires `pyspark` to be found in the `PATH`.
+
+.Test pyspark Stage
+[source,python]
+[asciibuild,pyspark]
+----
+from pyspark import SparkContext
+
+logFile = "Makefile"
+sc = SparkContext("local", "Simple App")
+logData = sc.textFile(logFile).cache()
+
+numAs = logData.filter(lambda s: 'a' in s).count()
+numBs = logData.filter(lambda s: 'b' in s).count()
+
+print("Lines with a: %i, lines with b: %i" % (numAs, numBs))
+----
+
+=== Test Spark Shell
+
+This section tests running `spark-shell` outside of a container. Requires `spark-shell` to be found in the `PATH`.
+
+.Test spark-shell Stage
+[source,scala]
+[asciibuild,spark-shell,spark_opts="--packages com.basho.riak:spark-riak-connector_2.10:1.6.0 --conf spark.riak.connection.host=127.0.0.1:8087"]
+----
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
+import org.apache.spark.SparkConf
+
+object SimpleApp {
+  def main(args: Array[String]) {
+    val logFile = "README.adoc"
+    val conf = new SparkConf().setAppName("Simple App")
+    val sc = new SparkContext(conf)
+    val logData = sc.textFile(logFile, 2).cache()
+    val numAs = logData.filter(line => line.contains("a")).count()
+    val numBs = logData.filter(line => line.contains("b")).count()
+    println("Lines with a: %s, Lines with b: %s".format(numAs, numBs))
+  }
+}
+----
+
+=== Test Concat
+
+This tests whether `asciibuild` can build up a single file from multiple sections.
+
+.First Section
+[source,Dockerfile]
+[concat,file=Dockerfile]
+----
+FROM alpine
+----
+
+ifdef::greeting[]
+This is another section.
+
+.Second Section
+[source,Dockerfile]
+[concat,file=Dockerfile]
+----
+RUN echo "Hello World" >/greeting.txt
+----
+endif::[]
+
+This is the third section.
+
+.Third Section
+[source,Dockerfile]
+[concat,file=Dockerfile]
+----
+CMD cat /greeting.txt
+----
+
+Now we should be able to build and run it.
+
+.Build and Run
+[source,bash]
+[asciibuild,bash]
+----
+docker build -t asciibuild-concat .
+[ "Hello World" == "$(docker run asciibuild-concat)" ]
+----
+
+=== Test Dockerfile include
+
+.Include Alpine Content
+[asciibuild,Dockerfile,image=build-essential-test:alpine,run=false]
+----
+FROM alpine
+include::build-essential.Dockerfile[tags=alpine;common]
+CMD /bin/sh
+----
+
+== After Build
+
+This defines what happens after the build. This always gets run, no matter what `ASCIIBUILD_SECTION` says.
+
+.Normal Block
+====
+[source,bash]
+----
+echo 'Normal listing block'
+----
+====

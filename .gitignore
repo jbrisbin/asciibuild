@@ -1,0 +1,10 @@
+.DS_Store
+*.log
+target
+build
+.idea
+*.iml
+*.gem
+/test/*.html
+/Dockerfile
+metastore_db

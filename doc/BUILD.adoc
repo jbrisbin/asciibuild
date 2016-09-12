@@ -1,0 +1,24 @@
+== Building `asciibuild`
+
+To build `asciibuild`, run the `make` utility using the `Makefile` found in the root of the `asciibuild` repository. All that does is run `gem install` with the appropriate flags to install the `asciibuild` gem locally.
+
+----
+> make install
+rm -Rf *.gem
+gem build asciibuild.gemspec
+  Successfully built RubyGem
+  Name: asciibuild
+  Version: 0.1.0
+  File: asciibuild-0.1.0.gem
+gem install ./asciibuild-*.gem -V -l
+/Users/jbrisbin/.rvm/gems/ruby-2.2.1/gems/asciibuild-0.1.0/lib/asciibuild.rb
+/Users/jbrisbin/.rvm/gems/ruby-2.2.1/gems/asciibuild-0.1.0/lib/asciibuild/extensions.rb
+Successfully installed asciibuild-0.1.0
+Parsing documentation for asciibuild-0.1.0
+Parsing sources...
+100% [ 2/ 2]  lib/asciibuild/extensions.rb
+Done installing documentation for asciibuild after 0 seconds
+1 gem installed
+----
+
+This installs the `asciibuild` gem and makes it available to Asciidoctor when using the `-r` flag to `asciidoctor`, which tells Asciidoctor to `require` the given module when processing the `.adoc` file.
