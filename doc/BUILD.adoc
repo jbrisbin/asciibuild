@@ -4,17 +4,19 @@ Building `asciibuild` can be done with bundler. The included `Gemfile` contains 
 
 .Build and Install asciibuild
 ----
-> bundle install
+> make install
+rm -Rf *.gem vendor *.log metastore_db Dockerfile Gemfile.lock
+gem uninstall -x asciibuild
+bundle install --no-cache --no-deployment
 Fetching gem metadata from https://rubygems.org/.........
 Fetching version metadata from https://rubygems.org/.
 Resolving dependencies...
-Installing asciidoctor 1.5.4
-Installing posix-spawn 0.3.11 with native extensions
-Installing yajl-ruby 1.2.1 with native extensions
+Using asciidoctor 1.5.4
+Using posix-spawn 0.3.11
+Using yajl-ruby 1.2.1
 Using bundler 1.13.1
-Installing pygments.rb 0.6.3
+Using pygments.rb 0.6.3
 Using asciibuild 0.1.0 from source at `.`
-Updating files in vendor/cache
 Bundle complete! 3 Gemfile dependencies, 6 gems now installed.
 Use `bundle show [gemname]` to see where a bundled gem is installed.
 ----
@@ -41,10 +43,9 @@ After installing the basics needed by Asciidoctor and Docker, install the necess
 RUN mkdir -p /tmp/asciibuild
 COPY . /tmp/asciibuild/
 WORKDIR /tmp/asciibuild
-RUN bundle update
-RUN bundle install -V
-RUN gem build -q asciibuild.gemspec
-RUN gem install -q ./asciibuild-*.gem -V -l
+RUN bundle install
+RUN gem build asciibuild.gemspec
+RUN gem install ./asciibuild-*.gem -l
 RUN rm -Rf /tmp/asciibuild
 RUN apk del build-base make ruby-dev
 ----
@@ -58,6 +59,8 @@ WORKDIR /usr/src
 
 ENTRYPOINT ["asciibuild"]
 ----
+
+Build the Docker image that can run `asciibuild`, expecting documents to be mounted to a volume at path `/usr/src` and, if using the optional Docker support, the Docker daemon socket at `/var/run/docker.sock`.
 
 .Docker build
 [asciibuild,bash]

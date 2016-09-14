@@ -1,11 +1,13 @@
 .DS_Store
-*.log
+.bundle
 target
 build
 .idea
 *.iml
 *.gem
+/doc/*.html
 /test/*.html
 /Dockerfile
 metastore_db
 *.lock
+*.log
