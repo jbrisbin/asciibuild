@@ -1,15 +1,18 @@
 RUN ?= true
+OPTS ?=
 
-.PHONY: all require clean install test
+SRC = $(shell find lib -name *.rb -print) bin/asciibuild
+
+.PHONY: all clean install test
 
 clean:
 	rm -Rf *.gem
+	gem uninstall -x asciibuild
 
-install: clean asciibuild.gemspec lib/asciibuild.rb
-	gem build asciibuild.gemspec
-	gem install ./asciibuild-*.gem -V -l
+install: clean asciibuild.gemspec $(SRC)
+	bundle install -V
 
 test: install
-	asciidoctor -r asciibuild -a run=$(RUN) -a greeting -a icons=font -a source-highlighter=pygments --trace test/test-stage.adoc
+	bundle exec asciibuild -a run=$(RUN) -a greeting $(OPTS) test/test-stage.adoc
 
 all: install

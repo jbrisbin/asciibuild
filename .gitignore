@@ -8,3 +8,4 @@ build
 /test/*.html
 /Dockerfile
 metastore_db
+*.lock

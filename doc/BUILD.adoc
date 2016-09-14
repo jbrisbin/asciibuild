@@ -1,24 +1,66 @@
 == Building `asciibuild`
 
-To build `asciibuild`, run the `make` utility using the `Makefile` found in the root of the `asciibuild` repository. All that does is run `gem install` with the appropriate flags to install the `asciibuild` gem locally.
+Building `asciibuild` can be done with bundler. The included `Gemfile` contains the necessary configuration to build and install `asciibuild` using a simple `bundle install`.
 
+.Build and Install asciibuild
 ----
-> make install
-rm -Rf *.gem
-gem build asciibuild.gemspec
-  Successfully built RubyGem
-  Name: asciibuild
-  Version: 0.1.0
-  File: asciibuild-0.1.0.gem
-gem install ./asciibuild-*.gem -V -l
-/Users/jbrisbin/.rvm/gems/ruby-2.2.1/gems/asciibuild-0.1.0/lib/asciibuild.rb
-/Users/jbrisbin/.rvm/gems/ruby-2.2.1/gems/asciibuild-0.1.0/lib/asciibuild/extensions.rb
-Successfully installed asciibuild-0.1.0
-Parsing documentation for asciibuild-0.1.0
-Parsing sources...
-100% [ 2/ 2]  lib/asciibuild/extensions.rb
-Done installing documentation for asciibuild after 0 seconds
-1 gem installed
+> bundle install
+Fetching gem metadata from https://rubygems.org/.........
+Fetching version metadata from https://rubygems.org/.
+Resolving dependencies...
+Installing asciidoctor 1.5.4
+Installing posix-spawn 0.3.11 with native extensions
+Installing yajl-ruby 1.2.1 with native extensions
+Using bundler 1.13.1
+Installing pygments.rb 0.6.3
+Using asciibuild 0.1.0 from source at `.`
+Updating files in vendor/cache
+Bundle complete! 3 Gemfile dependencies, 6 gems now installed.
+Use `bundle show [gemname]` to see where a bundled gem is installed.
 ----
 
-This installs the `asciibuild` gem and makes it available to Asciidoctor when using the `-r` flag to `asciidoctor`, which tells Asciidoctor to `require` the given module when processing the `.adoc` file.
+This installs the necessary dependencies, as well as the `asciibuild` gem.
+
+=== Building with Docker
+
+If you're using `rbenv` or `rvm` to manage your Ruby environments, then it may not matter to you to have `asciibuild` installed globally. If you want to use `asciibuild` in a Docker container, however, you just need to create a `Dockerfile` with the appropriate `gem install` commands.
+
+.Alpine-based Docker container
+[source,Dockerfile]
+[concat,file=Dockerfile]
+----
+FROM alpine
+RUN apk add --no-cache bash make build-base ruby ruby-rdoc ruby-irb ruby-bundler ruby-dev py-pip docker
+RUN pip install pygments
+----
+
+After installing the basics needed by Asciidoctor and Docker, install the necessary gems, as well as `asciibuild` itself.
+
+[concat,file=Dockerfile]
+----
+RUN mkdir -p /tmp/asciibuild
+COPY . /tmp/asciibuild/
+WORKDIR /tmp/asciibuild
+RUN bundle update
+RUN bundle install -V
+RUN gem build -q asciibuild.gemspec
+RUN gem install -q ./asciibuild-*.gem -V -l
+RUN rm -Rf /tmp/asciibuild
+RUN apk del build-base make ruby-dev
+----
+
+Run asciibuild on documents by mounting a volume at `/usr/src`.
+
+[concat,file=Dockerfile]
+----
+VOLUME /usr/src
+WORKDIR /usr/src
+
+ENTRYPOINT ["asciibuild"]
+----
+
+.Docker build
+[asciibuild,bash]
+----
+docker build -t asciibuild .
+----

@@ -1,0 +1,44 @@
+#!/usr/bin/env ruby
+require 'optparse'
+require 'asciibuild'
+
+def find_stylesheet name
+  File.expand_path "../stylesheets/#{name}.css", File.dirname(__FILE__)
+end
+
+attrs = {
+  "toc" => "left",
+  "icons" => "font",
+  "stylesheet" => find_stylesheet("colony"),
+  "source-highlighter" => "pygments"
+}
+
+options = {
+  :safe => 0,
+  :verbose => 2,
+  :attributes => attrs
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: asciibuild [options] file.adoc..."
+
+  opts.on('-s', '--stylesheet NAME', 'Stylesheet name') do |v|
+    attrs["stylesheet"] = find_stylesheet(v)
+  end
+  opts.on('-a', '--attribute ATTR', 'Document attribute') do |a|
+    parts = a.split(/=/)
+    k = parts[0]
+    v = if parts.size > 1 then parts[1] else true end
+    if attrs[k] and attrs[k].class == Array
+      entry << v
+    elsif attrs[k]
+      attrs[k] = [attrs[k], v]
+    else
+      attrs[k] = v
+    end
+  end
+end.parse!
+
+ARGV.each do |f|
+  Asciidoctor.convert_file f, options
+end

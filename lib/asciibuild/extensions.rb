@@ -2,6 +2,23 @@ require 'asciidoctor'
 require 'asciidoctor/extensions'
 require 'open3'
 
+def include_section? parent, attrs
+  sections = if parent.document.attributes["sections"]
+    parent.document.attributes["sections"].split(/,[ ]*/)
+  else
+    []
+  end
+
+  incl_sect = sections.empty?
+  sections.each do |s|
+    if not incl_sect and Regexp.new(s) =~ parent.title
+      incl_sect = true
+    end
+  end
+
+  incl_sect or (not parent.document.attributes["error"] and (/^Before/ =~ parent.title or /^After/ =~ parent.title))
+end
+
 module Asciibuild
   module Extensions
     class ConcatBlock < Asciidoctor::Extensions::BlockProcessor
@@ -11,15 +28,25 @@ module Asciibuild
       on_context :listing
 
       def process parent, reader, attrs
-        body = reader.lines * "\n"
-        fname = attrs["file"]
+        doctitle = parent.document.attributes["doctitle"]
+        body = reader.read
 
-        if ENV['ASCIIBUILD_SECTION'] and not parent.title == ENV['ASCIIBUILD_SECTION']
-          if not (/^Before/ =~ parent.title or /^After/ =~ parent.title)
-            puts "Section \"#{parent.title}\" skipped. Does not match ASCIIBUILD_SECTION=\"#{ENV['ASCIIBUILD_SECTION']}\"."
-            attrs['title'] = attrs['title'] + " (skipped)"
-            fname = false
+        puts ""
+        puts "#{doctitle} > #{parent.title} > #{attrs['title']}"
+        puts (">" * 80)
+
+        fname = if not include_section?(parent, attrs)
+          if parent.document.attributes["error"]
+            puts "Section \"#{parent.title}\" skipped due to previous error."
+            attrs['title'] = 'icon:pause-circle[role=red] ' + attrs['title'] + " (previous error)"
+          else
+            sections = parent.document.attributes["sections"].split(/,[ ]*/)
+            puts "Section \"#{parent.title}\" skipped. Does not match #{sections}."
+            attrs['title'] = 'icon:pause-circle[role=yellow] ' + attrs['title']
           end
+          false
+        else
+          attrs["file"]
         end
 
         if fname
@@ -33,9 +60,11 @@ module Asciibuild
           open(fname, 'a') do |f|
             f.write(body + "\n")
           end
+          puts body
         end
 
-        puts body
+        puts ("<" * 80)
+
         create_open_block parent, ["----", body, "----"], attrs
       end
 
@@ -51,10 +80,10 @@ module Asciibuild
       end
 
       def after_end(cmd, parent, lines, attrs)
-        if attrs[2] == "Dockerfile" and attrs["run"] and not attrs["run"] == "false"
-          doctitle = parent.document.attributes["doctitle"]
-          cmd = if attrs["run"] == "true" then "" else attrs["run"] end
-          name = if attrs["title"] then attrs["title"] else doctitle end
+        if attrs[2] == 'Dockerfile' and attrs['run'] and not attrs['run'] == 'false'
+          doctitle = parent.document.attributes['doctitle']
+          cmd = if attrs['run'] == 'true' then '' else attrs['run'] end
+          name = if attrs['original_title'] then attrs['original_title'] else doctitle end
           docker_run = "docker run -d -i --label asciibuild.name=\"#{doctitle}\" #{attrs['run_opts']} #{attrs['image']} #{cmd}"
 
           puts docker_run
@@ -63,6 +92,8 @@ module Asciibuild
           puts rout, rerr
           if status == 0
             parent.document.attributes["#{name} container"] = rout.chomp
+          else
+            parent.document.attributes["error"] = true
           end
           lines << "----" << "> #{docker_run}" << rout << rerr << "----"
         end
@@ -71,8 +102,9 @@ module Asciibuild
 
       def process parent, reader, attrs
         doctitle = parent.document.attributes["doctitle"]
+        attrs['original_title'] = attrs['title']
         lang = attrs[2]
-        body = reader.lines * "\n"
+        body = reader.read
 
         lines = []
         stderr_lines = []
@@ -87,33 +119,45 @@ module Asciibuild
           lang = "scala"
           "spark-shell #{attrs['spark_opts']}"
         else
-          container = attrs["container"]
-          if container
-            name = if not container == "true" then container else doctitle end
-            container = parent.document.attributes["#{name} container"]
-            "docker exec -i #{container} #{attrs['exec_opts']} #{lang}"
+          if attrs['container']
+            name = if attrs['container'] == 'true'
+              doctitle
+            else
+              attrs['container']
+            end
+            container_id = parent.document.attributes["#{name} container"]
+            "docker exec -i #{container_id} #{attrs['exec_opts']} #{lang}"
           else
             lang
           end
         end
 
-        lines << "[source,#{lang}]" << "----" << body << "----"
+        lines = ["[source,#{lang}]", "----", body, "", "----"]
+
+        puts ""
+        puts "#{doctitle} > #{parent.title} > #{attrs['title']}"
+        puts (">" * 80)
 
         before_start cmd, parent, attrs, lines, stderr_lines
 
-        if ENV['ASCIIBUILD_SECTION'] and not parent.title == ENV['ASCIIBUILD_SECTION']
-          if not (/^Before/ =~ parent.title or /^After/ =~ parent.title)
-            puts "Section \"#{parent.title}\" skipped. Does not match ASCIIBUILD_SECTION=\"#{ENV['ASCIIBUILD_SECTION']}\"."
-            attrs['title'] = attrs['title'] + " (skipped)"
-            return create_open_block parent, lines, attrs
+        if not include_section?(parent, attrs)
+          if parent.document.attributes["error"]
+            puts "Section \"#{parent.title}\" skipped due to previous error."
+            attrs['title'] = 'icon:pause-circle[role=red] ' + attrs['title'] + " (previous error)"
+          else
+            sections = parent.document.attributes["sections"].split(/,[ ]*/)
+            puts "Section \"#{parent.title}\" skipped. Does not match #{sections}."
+            attrs['title'] = 'icon:pause-circle[role=yellow] ' + attrs['title']
           end
+          return create_open_block parent, lines, attrs
         end
 
-        lines << ".Result of: #{cmd}" << "====" << ".STDOUT" << "----"
+        lines << ".#{cmd}" << "----"
 
         puts "cat <<EOF | #{cmd}"
         puts body
         puts "EOF"
+        puts ""
 
         status = 0
         Open3.popen3(cmd) do |stdin, stdout, stderr, wait_thr|
@@ -132,6 +176,7 @@ module Asciibuild
           status = wait_thr.value
         end
         lines << "----"
+        puts ("<" * 80)
 
         if not stderr_lines.size == 0
           lines << ".STDERR" << "----"
@@ -141,9 +186,11 @@ module Asciibuild
 
         if status != 0
           lines << "IMPORTANT: #{cmd} failed with #{status}"
+          parent.document.attributes["error"] = true
+          attrs['title'] = 'icon:exclamation-circle[role=red] ' + attrs['title']
+        else
+          attrs['title'] = 'icon:check-circle[role=green] ' + attrs['title']
         end
-
-        lines << "===="
 
         after_end cmd, parent, lines, attrs
       end
@@ -152,17 +199,7 @@ module Asciibuild
 
     class DocumentProcessor < Asciidoctor::Extensions::Treeprocessor
       def process document
-        # document.blocks.each do |b|
-        #   STDOUT.write("#{b}\n")
-        #
-        #   b.blocks.each do |bb|
-        #     STDOUT.write("\t#{bb}\n")
-        #
-        #     bb.blocks.each do |bbb|
-        #       STDOUT.write("\t\t#{bbb}\n")
-        #     end
-        #   end
-        # end
+        # puts document
         nil
       end
     end

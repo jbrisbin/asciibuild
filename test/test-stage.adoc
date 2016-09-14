@@ -1,11 +1,11 @@
+:version: 1.6.0
+:image: test-asciibuild:{version}
+:run: true
+
 = Test Stage Block Processor
 Jon Brisbin <jbrisbin@basho.com>
 
 == Environment
-
-:version: 1.6.0
-:image: test-asciibuild:{version}
-:run: true
 
 .Variables
 * version = {version}
@@ -14,7 +14,7 @@ Jon Brisbin <jbrisbin@basho.com>
 
 == Before Build
 
-This defines the environment this build will run in. This always gets run, no matter what `ASCIIBUILD_SECTION` says.
+This defines the environment this build will run in. This always gets run.
 
 .Alpine Build
 [[alpine]]
@@ -163,7 +163,14 @@ CMD /bin/sh
 
 == After Build
 
-This defines what happens after the build. This always gets run, no matter what `ASCIIBUILD_SECTION` says.
+This defines what happens after the build. This always gets run.
+
+.Cleanup
+[source,bash]
+[asciibuild,bash]
+----
+docker rm -f $(docker ps -a -q -f label=asciibuild.name="Test Stage Block Processor")
+----
 
 .Normal Block
 ====

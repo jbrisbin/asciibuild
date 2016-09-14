@@ -1,9 +1,9 @@
 = Using `asciibuild`
 
-To use `asciibuild` on your Asciidoctor files, make sure you add the require flag to your invocation of `asciidoctor`:
+To use `asciibuild` on your Asciidoctor files, make sure you add the require flag to your invocation of `asciidoctor` or just use the `asciibuild` executable that was insalled with the gem:
 
 ----
-> asciidoctor -r asciibuild build.adoc
+> asciibuild build.adoc
 ----
 
 In a stock Asciidoctor file, this won't do anything other process your `.adoc` into your preferred backend (`html` by default). If you want `asciibuild` to EVAL your listing blocks, just add a style to your listing blocks of `[asciibuild,{lang}]`.
