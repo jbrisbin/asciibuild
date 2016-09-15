@@ -5,5 +5,16 @@ rvm:
 - jruby-19mode
 - rbx-2
 
+services:
+  - docker
+
+before_script:
+  - curl -q -sSL http://d3kbcqa49mib13.cloudfront.net/spark-1.6.2-bin-hadoop2.6.tgz | tar -zxf - -C /opt
+
 script:
   - make test
+
+env:
+  global:
+    - SPARK_HOME=/opt/spark-1.6.2-bin-hadoop2.6
+    - PATH=$SPARK_HOME/bin:$PATH
