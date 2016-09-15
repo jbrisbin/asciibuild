@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.license        = 'Apache-2.0'
   s.require_paths  = ["lib"]
 
-  s.add_runtime_dependency "pygments.rb", "~> 0.6"
-  s.add_runtime_dependency "asciidoctor", "~> 1.5"
+  s.add_dependency "asciidoctor", "~> 1.5"
+  s.add_dependency "pygments.rb", "~> 0.6"
+  s.add_dependency "mustache", "~> 1.0"
 end

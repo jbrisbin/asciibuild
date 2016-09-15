@@ -2,7 +2,7 @@
 :image: test-asciibuild:{version}
 :run: true
 
-= Test Stage Block Processor
+= Test Block Processor
 Jon Brisbin <jbrisbin@basho.com>
 
 == Environment
@@ -19,7 +19,7 @@ This defines the environment this build will run in. This always gets run.
 .Alpine Build
 [[alpine]]
 [source,Dockerfile]
-[asciibuild,Dockerfile,image={image}-alpine,build_opts="",run={run}]
+[asciibuild,Dockerfile,image={image}-alpine,build_opts="",run={run},overwrite=true]
 ----
 FROM alpine
 RUN apk add --no-cache bash
@@ -29,7 +29,7 @@ CMD /bin/cat
 .Ubuntu Build
 [[ubuntu]]
 [source,Dockerfile]
-[asciibuild,Dockerfile,image={image}-ubuntu,build_opts="",run={run}]
+[asciibuild,Dockerfile,image={image}-ubuntu,build_opts="",run={run},overwrite=true]
 ----
 FROM ubuntu
 RUN apt-get update && apt-get install -y python # <1>
@@ -45,7 +45,7 @@ This is the build section, which runs in container `{image}`.
 
 This section tests running `bash` in an Alpine container.
 
-.Test bash Stage
+.Test bash
 [source,bash]
 [asciibuild,bash,container="Alpine Build"]
 ----
@@ -56,7 +56,7 @@ echo OS: `uname -s`
 
 This section tests running `python` in a Ubuntu container.
 
-.Test python Stage
+.Test python
 [source,python]
 [asciibuild,python,container="Ubuntu Build"]
 ----
@@ -69,7 +69,7 @@ subprocess.call(["uname", "-s"])
 
 This section tests running `pyspark` outside of a container. Requires `pyspark` to be found in the `PATH`.
 
-.Test pyspark Stage
+.Test pyspark
 [source,python]
 [asciibuild,pyspark]
 ----
@@ -89,7 +89,7 @@ print("Lines with a: %i, lines with b: %i" % (numAs, numBs))
 
 This section tests running `spark-shell` outside of a container. Requires `spark-shell` to be found in the `PATH`.
 
-.Test spark-shell Stage
+.Test spark-shell
 [source,scala]
 [asciibuild,spark-shell,spark_opts="--packages com.basho.riak:spark-riak-connector_2.10:1.6.0 --conf spark.riak.connection.host=127.0.0.1:8087"]
 ----
@@ -108,6 +108,22 @@ object SimpleApp {
     println("Lines with a: %s, Lines with b: %s".format(numAs, numBs))
   }
 }
+----
+
+=== Test Erlang
+
+This sections tests running Erlang code via `escript`. Requires `escript` to be found in the `PATH`.
+
+.Test Erlang
+[source,erlang]
+[asciibuild,erlang,overwrite=true]
+----
+%% First line must be empty
+main(_) ->
+  Greeting = [
+    {hello, <<"World!">>}
+  ],
+  io:format("greeting: ~p", [Greeting]).
 ----
 
 === Test Concat
@@ -169,7 +185,7 @@ This defines what happens after the build. This always gets run.
 [source,bash]
 [asciibuild,bash]
 ----
-docker rm -f $(docker ps -a -q -f label=asciibuild.name="Test Stage Block Processor")
+docker rm -f $(docker ps -a -q -f label=asciibuild.name="Test Block Processor")
 ----
 
 .Normal Block

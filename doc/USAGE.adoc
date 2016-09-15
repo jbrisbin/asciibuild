@@ -1,4 +1,4 @@
-= Using `asciibuild`
+= Usage
 
 To use `asciibuild` on your Asciidoctor files, make sure you add the require flag to your invocation of `asciidoctor` or just use the `asciibuild` executable that was insalled with the gem:
 
@@ -23,7 +23,7 @@ echo Hello `uname -s`
 ----
 ....
 
-== Using asciibuild as Spark Notebook
+== Using Spark
 
 `asciibuild` supports http://spark.apache.org/[Apache Spark] out-of-the-box. It supports both http://spark.apache.org/docs/latest/programming-guide.html#tab_python_0[pyspark] and http://spark.apache.org/docs/latest/programming-guide.html#tab_scala_0[spark-shell] (Python and Scala, respectively). To use the Spark support in `asciibuild`, add a style of `[asciibuild,pyspark]` for PySpark or `[asciibuild,spark-shell]` for Scala.
 
@@ -67,3 +67,5 @@ subprocess.call(["uname", "-s"])
 ....
 
 NOTE: The styles `[source,bash]` and `[source,python]` are for the benefit of editors that recognize Asciidoc and will show source code formatting in a preview. `asciibuild` will add its own styles to the resulting blocks, regardless of what is set in the source document, so the generated document will be formatted correctly.
+
+== Handling Output

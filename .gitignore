@@ -11,3 +11,4 @@ build
 metastore_db
 *.lock
 *.log
+abuild/

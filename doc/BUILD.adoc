@@ -1,69 +1,83 @@
-== Building `asciibuild`
+== Building asciibuild
 
-Building `asciibuild` can be done with bundler. The included `Gemfile` contains the necessary configuration to build and install `asciibuild` using a simple `bundle install`.
+Building `asciibuild` can be done with bundler. The included link:../Gemfile[Gemfile] contains the necessary configuration to build and install `asciibuild` using a simple `bundle install`.
 
-.Build and Install asciibuild
+.Build asciibuild itself
 ----
 > make install
 rm -Rf *.gem vendor *.log metastore_db Dockerfile Gemfile.lock
 gem uninstall -x asciibuild
-bundle install --no-cache --no-deployment
+bundle install
 Fetching gem metadata from https://rubygems.org/.........
 Fetching version metadata from https://rubygems.org/.
 Resolving dependencies...
 Using asciidoctor 1.5.4
+Using mustache 1.0.3
 Using posix-spawn 0.3.11
 Using yajl-ruby 1.2.1
 Using bundler 1.13.1
 Using pygments.rb 0.6.3
 Using asciibuild 0.1.0 from source at `.`
-Bundle complete! 3 Gemfile dependencies, 6 gems now installed.
+Bundle complete! 4 Gemfile dependencies, 7 gems now installed.
 Use `bundle show [gemname]` to see where a bundled gem is installed.
 ----
 
-This installs the necessary dependencies, as well as the `asciibuild` gem.
+This installs the necessary dependencies, as well as the `asciibuild` gem with bundler. In order to execute `asciibuild` installed this way, you must invoke it with `bundle exec asciibuild`. An example invocation can be found in the link:../Makefile[Makefile]
 
 === Building with Docker
 
-If you're using `rbenv` or `rvm` to manage your Ruby environments, then it may not matter to you to have `asciibuild` installed globally. If you want to use `asciibuild` in a Docker container, however, you just need to create a `Dockerfile` with the appropriate `gem install` commands.
+If you're using `rbenv` footnote:[https://github.com/rbenv/rbenv] or `rvm` footnote:[https://rvm.io/] to manage your Ruby environments, then it may not matter to you to have `asciibuild` installed globally. As an alternative, rather than installing `asciibuild` globally, you can use a Docker image to process documents (assuming the image contains anything you're likely to need to run from any of your listing blocks like `bash`, `python`, or what have you).
+
+NOTE: This is an `asciibuild`-enabled file. You can change the variables defined here by passing `-a` flags when running `asciibuild` on this file.
+
+:workdir: /tmp/asciibuild
+
+.Variables
+* workdir = {workdir}
 
 .Alpine-based Docker container
 [source,Dockerfile]
-[concat,file=Dockerfile]
+[asciibuild,Dockerfile,image=asciibuild,overwrite=true]
 ----
 FROM alpine
 RUN apk add --no-cache bash make build-base ruby ruby-rdoc ruby-irb ruby-bundler ruby-dev py-pip docker
 RUN pip install pygments
-----
 
-After installing the basics needed by Asciidoctor and Docker, install the necessary gems, as well as `asciibuild` itself.
-
-[concat,file=Dockerfile]
-----
-RUN mkdir -p /tmp/asciibuild
-COPY . /tmp/asciibuild/
-WORKDIR /tmp/asciibuild
+RUN mkdir -p {{workdir}}
+COPY . {{workdir}}/
+WORKDIR {{workdir}}
 RUN bundle install
 RUN gem build asciibuild.gemspec
 RUN gem install ./asciibuild-*.gem -l
-RUN rm -Rf /tmp/asciibuild
+RUN rm -Rf {{workdir}}
 RUN apk del build-base make ruby-dev
-----
 
-Run asciibuild on documents by mounting a volume at `/usr/src`.
-
-[concat,file=Dockerfile]
-----
 VOLUME /usr/src
 WORKDIR /usr/src
 
 ENTRYPOINT ["asciibuild"]
 ----
 
-Build the Docker image that can run `asciibuild`, expecting documents to be mounted to a volume at path `/usr/src` and, if using the optional Docker support, the Docker daemon socket at `/var/run/docker.sock`.
+Build the Docker image that can run `asciibuild` by using `docker build`:
 
 .Docker build
-[asciibuild,bash]
+[source,bash]
 ----
 docker build -t asciibuild .
+----
+
+You can also run the build with `asciibuild` on this file.
+
+.Docker build using asciibuild
+[source,bash]
+----
+asciibuild doc/BUILD.adoc
+----
+
+Mount your source on `/usr/src` (the default workdir) and, if you plan on using the built-in Docker support, `/var/run/docker.sock` so that `asciibuild` can execute the `docker` client and contact your Docker daemon.
+
+.Docker run
+[source,bash]
+----
+docker run --rm -v $(pwd):/usr/src -v /var/run/docker.sock:/var/run/docker.sock asciibuild BUILD.adoc
 ----

@@ -16,6 +16,8 @@ attrs = {
 options = {
   :safe => 0,
   :verbose => 2,
+  :to_dir => "abuild",
+  :mkdirs => true,
   :attributes => attrs
 }
 
@@ -40,5 +42,11 @@ OptionParser.new do |opts|
 end.parse!
 
 ARGV.each do |f|
+  basename = File.basename f, ".*"
+  dirname = File.dirname f
+  basedir = File.join options[:to_dir], dirname
+  options[:to_dir] = basedir
+  options[:to_file] = "#{basename}-#{Time.now.getutc.to_i}.html"
+
   Asciidoctor.convert_file f, options
 end

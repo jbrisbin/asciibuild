@@ -1,6 +1,7 @@
 require 'asciidoctor'
 require 'asciidoctor/extensions'
 require 'open3'
+require 'mustache'
 
 def include_section? parent, attrs
   sections = if parent.document.attributes["sections"]
@@ -101,21 +102,45 @@ module Asciibuild
       end
 
       def process parent, reader, attrs
+        if not include_section?(parent, attrs)
+          if parent.document.attributes["error"]
+            puts "Section \"#{parent.title}\" skipped due to previous error."
+            attrs['title'] = 'icon:pause-circle[role=red] ' + attrs['title'] + " (previous error)"
+          else
+            sections = parent.document.attributes["sections"].split(/,[ ]*/)
+            puts "Section \"#{parent.title}\" skipped. Does not match #{sections}."
+            attrs['title'] = 'icon:pause-circle[role=yellow] ' + attrs['title']
+          end
+          return create_open_block parent, ["----"] + reader.lines + ["----"], attrs
+        end
+
         doctitle = parent.document.attributes["doctitle"]
         attrs['original_title'] = attrs['title']
         lang = attrs[2]
-        body = reader.read
+        body = Mustache.render(reader.read, parent.document.attributes)
 
         lines = []
         stderr_lines = []
 
         cmd = case lang
-        when "Dockerfile"
-          "docker build -t #{attrs['image']} #{attrs['build_opts']} -"
-        when "pyspark"
+        when 'Dockerfile'
+          name = if attrs['file'] then attrs['file'] else 'Dockerfile' end
+          mode = if attrs['overwrite'] == 'true' then 'w' else File::WRONLY|File::CREAT|File::EXCL end
+          open(name, mode) do |f|
+            f.write(body + "\n")
+          end
+          "docker build -t #{attrs['image']} #{attrs['build_opts']} -f #{name} ."
+        when 'erlang'
+          name = if attrs['file'] then attrs['file'] else 'escript.erl' end
+          mode = if attrs['overwrite'] == 'true' then 'w' else File::WRONLY|File::CREAT|File::EXCL end
+          open(name, mode) do |f|
+            f.write(body + "\n")
+          end
+          "escript #{name} #{attrs['escript_opts']}"
+        when 'pyspark'
           lang = "python"
           "pyspark #{attrs['spark_opts']}"
-        when "spark-shell"
+        when 'spark-shell'
           lang = "scala"
           "spark-shell #{attrs['spark_opts']}"
         else
@@ -140,23 +165,10 @@ module Asciibuild
 
         before_start cmd, parent, attrs, lines, stderr_lines
 
-        if not include_section?(parent, attrs)
-          if parent.document.attributes["error"]
-            puts "Section \"#{parent.title}\" skipped due to previous error."
-            attrs['title'] = 'icon:pause-circle[role=red] ' + attrs['title'] + " (previous error)"
-          else
-            sections = parent.document.attributes["sections"].split(/,[ ]*/)
-            puts "Section \"#{parent.title}\" skipped. Does not match #{sections}."
-            attrs['title'] = 'icon:pause-circle[role=yellow] ' + attrs['title']
-          end
-          return create_open_block parent, lines, attrs
-        end
-
         lines << ".#{cmd}" << "----"
 
-        puts "cat <<EOF | #{cmd}"
         puts body
-        puts "EOF"
+        puts "> #{cmd}"
         puts ""
 
         status = 0
@@ -197,15 +209,7 @@ module Asciibuild
 
     end
 
-    class DocumentProcessor < Asciidoctor::Extensions::Treeprocessor
-      def process document
-        # puts document
-        nil
-      end
-    end
-
     Asciidoctor::Extensions.register do
-      treeprocessor DocumentProcessor
       block EvalBlock
       block ConcatBlock
     end
