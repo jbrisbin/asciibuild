@@ -7,6 +7,12 @@ Jon Brisbin <jbrisbin@basho.com>
 
 *Use* `asciibuild` to create full builds, aggregate projects of different kinds that use entirely different build systems, mix multiple languages together in a single `.adoc` file, or create examples and test suites that intermingle the code under test with documentation _about_ the tests.
 
+image:https://travis-ci.org/jbrisbin/asciibuild.svg[link="https://travis-ci.org/jbrisbin/asciibuild/"]
+
+== Sections
+
+This documentation is broken up into the following sections:
+
 include::doc/BUILD.adoc[]
 
 include::doc/USAGE.adoc[]
