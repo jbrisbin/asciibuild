@@ -125,14 +125,14 @@ module Asciibuild
         cmd = case lang
         when 'Dockerfile'
           name = if attrs['file'] then attrs['file'] else 'Dockerfile' end
-          mode = if attrs['overwrite'] == 'true' then 'w' else File::WRONLY|File::CREAT|File::EXCL end
+          mode = if attrs['overwrite'] == 'false' then File::WRONLY|File::CREAT|File::EXCL else 'w' end
           open(name, mode) do |f|
             f.write(body + "\n")
           end
           "docker build -t #{attrs['image']} #{attrs['build_opts']} -f #{name} ."
         when 'erlang'
           name = if attrs['file'] then attrs['file'] else 'escript.erl' end
-          mode = if attrs['overwrite'] == 'true' then 'w' else File::WRONLY|File::CREAT|File::EXCL end
+          mode = if attrs['overwrite'] == 'false' then File::WRONLY|File::CREAT|File::EXCL else 'w' end
           open(name, mode) do |f|
             f.write(body + "\n")
           end
