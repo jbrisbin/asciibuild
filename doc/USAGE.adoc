@@ -69,3 +69,9 @@ subprocess.call(["uname", "-s"])
 NOTE: The styles `[source,bash]` and `[source,python]` are for the benefit of editors that recognize Asciidoc and will show source code formatting in a preview. `asciibuild` will add its own styles to the resulting blocks, regardless of what is set in the source document, so the generated document will be formatted correctly.
 
 == Handling Output
+
+Output of commands described in `asciibuild`-enabled listing blocks is inserted directly into the rendered document, immediately following the block definition.
+
+In the following screenshot, notice that the output of the Erlang code is added to the document immediately following the block where the code is listed. If an error occurs, an `IMPORTANT:` section is added and the output from `STDERR` is added to the document.
+
+image:doc/test_erlang.png[Test Erlang]
