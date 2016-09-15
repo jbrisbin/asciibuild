@@ -74,4 +74,4 @@ Output of commands described in `asciibuild`-enabled listing blocks is inserted 
 
 In the following screenshot, notice that the output of the Erlang code is added to the document immediately following the block where the code is listed. If an error occurs, an `IMPORTANT:` section is added and the output from `STDERR` is added to the document.
 
-image:doc/test_erlang.png[Test Erlang]
+image:test_erlang.png[Test Erlang]
