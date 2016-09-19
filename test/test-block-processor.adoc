@@ -112,7 +112,7 @@ object SimpleApp {
 
 === Test Erlang
 
-This sections tests running Erlang code via `escript`. Requires `escript` to be found in the `PATH`.
+This section tests running Erlang code via `escript`. Requires `escript` to be found in the `PATH`.
 
 .Test Erlang
 [source,erlang]
@@ -132,7 +132,7 @@ This tests whether `asciibuild` can build up a single file from multiple section
 
 .First Section
 [source,Dockerfile]
-[concat,file=Dockerfile]
+[concat,Dockerfile,file=Dockerfile]
 ----
 FROM alpine
 ----
@@ -142,7 +142,7 @@ This is another section.
 
 .Second Section
 [source,Dockerfile]
-[concat,file=Dockerfile]
+[concat,Dockerfile,file=Dockerfile]
 ----
 RUN echo "Hello World" >/greeting.txt
 ----
@@ -152,7 +152,7 @@ This is the third section.
 
 .Third Section
 [source,Dockerfile]
-[concat,file=Dockerfile]
+[concat,Dockerfile,file=Dockerfile]
 ----
 CMD cat /greeting.txt
 ----

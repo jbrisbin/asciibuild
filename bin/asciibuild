@@ -7,7 +7,9 @@ def find_stylesheet name
 end
 
 attrs = {
+  "pwd" => Dir.pwd,
   "toc" => "left",
+  "sectlinks" => true,
   "icons" => "font",
   "stylesheet" => find_stylesheet("colony"),
   "source-highlighter" => "pygments"
@@ -46,6 +48,7 @@ ARGV.each do |f|
   dirname = File.dirname f
   basedir = File.join options[:to_dir], dirname
   options[:to_dir] = basedir
+  attrs["outdir"] = basedir
   options[:to_file] = "#{basename}-#{Time.now.getutc.to_i}.html"
 
   Asciidoctor.convert_file f, options

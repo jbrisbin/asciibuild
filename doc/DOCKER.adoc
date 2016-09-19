@@ -4,4 +4,13 @@
 
 == Creating and Building Docker containers
 
-`asciibuild` can build and run a Docker container if you add the style `[asciibuild,Dockerfile]` to a listing block. 
+`asciibuild` can build and run a Docker container if you add the style `[asciibuild,Dockerfile,image={tag}]` to a listing block. Only the named attribute `image` is required. It must contain a valid Docker image name that will be used as the `-t` parameter to the `docker build` command.
+
+.Optional Named Attributes
+* `build_opts=` - _(default: '')_ - Additional options to pass to the `docker build` command. Could be used to pass `--build-arg` or other flags to influence the build.
+* `run=[true|false|command]` - _(default: '')_ - If set to anything other than '' or `false`, run this image after building it. If `run=true`, do not pass a command but let the default built-in command take effect. If `run=somecmd.sh`, pass `somecmd.sh` as the command to the container.
+* `run_opts=` - _(default: '')_ - Additional options to pass to the `docker run` command if `run != false`.
+
+To create a Docker image, place either the full content of a `Dockerfile` into the listing block, or include partial content using http://asciidoctor.org/docs/user-manual/#include-directive[Asciidoctor include]. Examples can be found in the link:../test/test-block-processor.adoc#alpine[test .adoc file].
+
+NOTE: `asciibuild` processes documents in `SERVER` mode so that includes will work.

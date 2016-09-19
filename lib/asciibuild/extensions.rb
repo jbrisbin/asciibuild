@@ -20,9 +20,50 @@ def include_section? parent, attrs
   incl_sect or (not parent.document.attributes["error"] and (/^Before/ =~ parent.title or /^After/ =~ parent.title))
 end
 
+def get_lang lang
+  case lang
+  when 'pyspark'
+    'python'
+  when 'spark-shell'
+    'scala'
+  else
+    lang
+  end
+end
+
+def write_file attrs, default_name, body
+  name = attrs['file'] ||= default_name
+  mode = if attrs['overwrite'] == 'false' then File::WRONLY|File::CREAT|File::EXCL else 'w' end
+  open(name, mode) do |f|
+    f.write(body + "\n")
+  end
+end
+
 module Asciibuild
   module Extensions
     class ConcatBlock < Asciidoctor::Extensions::BlockProcessor
+      # BlockProcessor to concatenate content into a single file.
+      # It allows you to break up sections of a file into separate listing blocks and aggregate them together
+      # into a single file you can reference later in the process.
+      #
+      # .Add function to file
+      # [concat,bash,file=utility.sh]
+      # ----
+      # #!/bin/bash
+      #
+      # fun greet() {
+      #   echo 'Hello World'
+      # }
+      # ----
+      #
+      # .Add call to file
+      # [concat,bash,file=utility.sh]
+      # ----
+      # echo 'Hello World'
+      # ----
+      #
+      # After the document is processed, a file in the working directory will exist named "utility.sh" which
+      # will consist of the content of all the listing blocks in that section that use the same file name.
 
       use_dsl
       named :concat
@@ -72,6 +113,25 @@ module Asciibuild
     end
 
     class EvalBlock < Asciidoctor::Extensions::BlockProcessor
+      # BlockProcessor to make the content of listing blocks executable. Has built-in support for:
+      #
+      # * `Dockerfile`
+      # * `spark-shell` (Scala)
+      # * `pyspark` (Python)
+      # * `erlang`
+      # * Any interpreted language that accepts `STDIN`
+      #
+      # To use, add the `[asciibuild,Language]` style to a listing block.
+      #
+      # .Run a bash script
+      # [asciibuild,bash]
+      # ----
+      # echo 'Hello World'
+      # ----
+      #
+      # If using a language like BASH or Python, the language's interpreter should accept `STDIN` as
+      # input and be found in the `PATH`.
+
 
       use_dsl
       named :asciibuild
@@ -111,51 +171,42 @@ module Asciibuild
             puts "Section \"#{parent.title}\" skipped. Does not match #{sections}."
             attrs['title'] = 'icon:pause-circle[role=yellow] ' + attrs['title']
           end
-          return create_open_block parent, ["----"] + reader.lines + ["----"], attrs
+          lang = get_lang attrs[2]
+          return create_open_block parent, ["[source,#{lang}]", "----"] + reader.lines + ["----"], attrs
         end
 
         doctitle = parent.document.attributes["doctitle"]
         attrs['original_title'] = attrs['title']
-        lang = attrs[2]
         body = Mustache.render(reader.read, parent.document.attributes)
 
         lines = []
         stderr_lines = []
 
-        cmd = case lang
+        cmd = case attrs[2]
         when 'Dockerfile'
-          name = if attrs['file'] then attrs['file'] else 'Dockerfile' end
-          mode = if attrs['overwrite'] == 'false' then File::WRONLY|File::CREAT|File::EXCL else 'w' end
-          open(name, mode) do |f|
-            f.write(body + "\n")
+          if not attrs['image']
+            raise 'Missing image name. Add attribute of image={name} to the [asciibuild,Dockerfile] style.'
           end
-          "docker build -t #{attrs['image']} #{attrs['build_opts']} -f #{name} ."
+          fname = attrs['file'] ||= 'Dockerfile'
+          write_file attrs, 'Dockerfile', body
+          "docker build -t #{attrs['image']} #{attrs['build_opts']} -f #{fname} ."
         when 'erlang'
-          name = if attrs['file'] then attrs['file'] else 'escript.erl' end
-          mode = if attrs['overwrite'] == 'false' then File::WRONLY|File::CREAT|File::EXCL else 'w' end
-          open(name, mode) do |f|
-            f.write(body + "\n")
-          end
+          write_file attrs, 'escript.erl', body
           "escript #{name} #{attrs['escript_opts']}"
         when 'pyspark'
-          lang = "python"
           "pyspark #{attrs['spark_opts']}"
         when 'spark-shell'
-          lang = "scala"
           "spark-shell #{attrs['spark_opts']}"
         else
           if attrs['container']
-            name = if attrs['container'] == 'true'
-              doctitle
-            else
-              attrs['container']
-            end
+            name = if attrs['container'] == 'true' then doctitle else attrs['container'] end
             container_id = parent.document.attributes["#{name} container"]
-            "docker exec -i #{container_id} #{attrs['exec_opts']} #{lang}"
+            "docker exec -i #{container_id} #{attrs['exec_opts']} #{attrs[2]}"
           else
-            lang
+            attrs[2]
           end
         end
+        lang = get_lang attrs[2]
 
         lines = ["[source,#{lang}]", "----", body, "", "----"]
 

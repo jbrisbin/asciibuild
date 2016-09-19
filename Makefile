@@ -3,12 +3,16 @@ OPTS ?=
 
 SRC = $(shell find lib -name *.rb -print) bin/asciibuild
 
-.PHONY: all clean install test
+.PHONY: all clean gem install test
 
 clean:
 	rm -Rf *.gem vendor *.log metastore_db Dockerfile Gemfile.lock abuild
 	gem uninstall -x asciibuild
 
+gem: clean asciibuild.gemspec $(SRC)
+	gem build ./asciibuild.gemspec
+	gem install ./asciibuild-*.gem
+	
 install: clean asciibuild.gemspec $(SRC)
 	bundle install
 

@@ -1,12 +1,25 @@
 = Usage
 
-To use `asciibuild` on your Asciidoctor files, make sure you add the require flag to your invocation of `asciidoctor` or just use the `asciibuild` executable that was insalled with the gem:
+To use `asciibuild` on your Asciidoctor files, make sure you add the require flag to your invocation of `asciidoctor` or just use the `asciibuild` executable that was insalled with the gem.
 
+== Running asciibuild
+
+In a stock Asciidoctor file, this won't do anything other than process the `.adoc` into your preferred backend (`html` by default). If you want `asciibuild` to EVAL your listing blocks, just add a style to them of `[asciibuild,{lang}]`, where `lang` is either one of the built-in supported languages, or an executable that accepts input on `<STDIN>`.
+
+[source,bash]
 ----
-> asciibuild build.adoc
+asciibuild build.adoc
 ----
 
-In a stock Asciidoctor file, this won't do anything other process your `.adoc` into your preferred backend (`html` by default). If you want `asciibuild` to EVAL your listing blocks, just add a style to your listing blocks of `[asciibuild,{lang}]`.
+Currently, the built-in supported languages are described in the following list. Required settings are listed with `{attribute}` where the value must go and optional attributes are listed with their default settings.
+
+.Supported languages
+* Any interpreter that accepts `<STDIN>` as input. Examples: `bash` and `python`.
+* Docker
+  - `[asciibuild, Dockerfile, image={name}, file=Dockerfile, overwrite=true, run=false, build_opts="", run_opts=""]` _For more on using the Docker support, visit the link:DOCKER.adoc[DOCKER] document_
+* Spark
+  - Scala: `[asciibuild, spark-shell]`
+  - Python: `[asciibuild, pyspark]`
 
 == Using Shell
 
@@ -70,8 +83,6 @@ NOTE: The styles `[source,bash]` and `[source,python]` are for the benefit of ed
 
 == Handling Output
 
-Output of commands described in `asciibuild`-enabled listing blocks is inserted directly into the rendered document, immediately following the block definition.
+Output of commands described in `asciibuild`-enabled listing blocks is inserted directly into the rendered document, immediately following the block definition. If there is any output on `<STDERR>` it will also be rendered into the document. If the return code of the command is anything other than `0`, the step will be marked as "in error" and subsequent steps will be skipped. A red warning icon will appear next to the step title to indicate the error. The following screenshot shows STDOUT and STDERR when an error occurs.
 
-In the following screenshot, notice that the output of the Erlang code is added to the document immediately following the block where the code is listed. If an error occurs, an `IMPORTANT:` section is added and the output from `STDERR` is added to the document.
-
-image:test_erlang.png[Test Erlang]
+image:asciibuild_error.jpg[Error in Asciibuild]

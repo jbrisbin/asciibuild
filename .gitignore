@@ -5,6 +5,7 @@ build
 .idea
 *.iml
 *.gem
+*.erl
 /doc/*.html
 /test/*.html
 /Dockerfile
