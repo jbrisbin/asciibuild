@@ -14,3 +14,31 @@
 * `overwrite=[true]` - _(default: true)_ - Whether or not to overwrite the file named in the `file` attribute. Defaults to `true` so that `asciibuild` can be run repeatedly on a file and the contents of e.g. `Dockerfile` replaced on each run. If `overwrite=false`, however, `asciibuild` will raise an error if the file already exists. In this case it's up to the user to provide for the cleaning of the file using `make` or `rake` or simply `rm -f`.
 
 NOTE: `asciibuild` processes documents in `SERVER` mode so that includes will work.
+
+== Referencing Docker images
+
+While it is possible to run Docker commands in a `bash` block, using the built-in Docker support has the advantage of baking `docker exec` functionality into each listing block. If a named attribute exists like `container="Title of Container Block"` then `asciibuild` will wrap the call to the interpreter of your specified language in a `docker exec`. The value of the `container` must be the title of the block in which the `Dockerfile` instructions exist. Add `run=true` to that listing block to get a container running in the background (be sure the `CMD` or `run_opts` contain a command that will block indefinitely and hold the container open e.g. `/bin/cat`).
+
+[listing]
+....
+[[alpine]]
+.Alpine Base
+[source,Dockerfile]
+[asciibuild,Dockerfile,image=base:alpine,run=true]
+----
+FROM alpine
+RUN apk add --no-cache bash
+CMD /bin/cat
+----
+
+.Run BASH script
+[source,bash]
+[asciibuild,bash,container="Alpine Base"]
+----
+echo 'Hello World'
+----
+....
+
+In this example, because the `container` attribute is set to the title of the `Dockerfile` block and because `run=true`, `asciibuild` will wrap the call to `bash` for the "Run BASH script" block with a `docker exec` to the container that was started in the background.
+
+NOTE: In order to clean up backgrounded containers, `asciibuild` adds a label to anything it starts. Filter the containers with `label=asciibuild.name="$doctitle"`, where `$doctitle` is set to the title of the AsciiDoc document you're processing. An example of this cleanup procedure can be found in the link:../test/test-block-processor.adoc#cleanup[test document].

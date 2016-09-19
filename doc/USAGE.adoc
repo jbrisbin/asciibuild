@@ -86,3 +86,15 @@ NOTE: The styles `[source,bash]` and `[source,python]` are for the benefit of ed
 Output of commands described in `asciibuild`-enabled listing blocks is inserted directly into the rendered document, immediately following the block definition. If there is any output on `<STDERR>` it will also be rendered into the document. If the return code of the command is anything other than `0`, the step will be marked as "in error" and subsequent steps will be skipped. A red warning icon will appear next to the step title to indicate the error. The following screenshot shows STDOUT and STDERR when an error occurs.
 
 image:asciibuild_error.jpg[Error in Asciibuild]
+
+== Advanced Usage
+
+It's possible to execute only a given set of blocks in an `asciibuild` document by setting the document attribute `sections` to a comma-separate list of regexes that will match section titles that should be executed. If a section title does not match one of these regexes, it will be marked in the resulting document as "skipped" with a yellow pause icon, as in the following example and screenshot.
+
+.Execute only One Section
+[source,bash]
+----
+asciibuild -a sections="Test Bash" test/test-block-processor.adoc
+----
+
+image:asciibuild_skipped.jpg[Section Skipped]

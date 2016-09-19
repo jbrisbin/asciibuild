@@ -181,6 +181,7 @@ CMD /bin/sh
 
 This defines what happens after the build. This always gets run.
 
+[[cleanup]]
 .Cleanup
 [source,bash]
 [asciibuild,bash]
