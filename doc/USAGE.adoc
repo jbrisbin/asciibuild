@@ -1,3 +1,6 @@
+:icons: font
+:source-highlighter: pygments
+
 = Usage
 
 To use `asciibuild` on your Asciidoctor files, make sure you add the require flag to your invocation of `asciidoctor` or just use the `asciibuild` executable that was insalled with the gem.

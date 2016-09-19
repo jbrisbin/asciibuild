@@ -1,3 +1,6 @@
+:icons: font
+:source-highlighter: pygments
+
 = Docker Support
 
 `asciibuild` has out-of-the-box support for creating, manipulating, and executing code inside of Docker containers.
