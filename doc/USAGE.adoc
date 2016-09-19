@@ -91,6 +91,8 @@ image:asciibuild_error.jpg[Error in Asciibuild]
 
 It's possible to execute only a given set of blocks in an `asciibuild` document by setting the document attribute `sections` to a comma-separate list of regexes that will match section titles that should be executed. If a section title does not match one of these regexes, it will be marked in the resulting document as "skipped" with a yellow pause icon, as in the following example and screenshot.
 
+NOTE: Any section that starts with the name "Before" or "After" will *always* be run, regardless of the setting of `sections`. This is to provide setup and cleanup functionality.
+
 .Execute only One Section
 [source,bash]
 ----
