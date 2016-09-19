@@ -4,11 +4,15 @@ To use `asciibuild` on your Asciidoctor files, make sure you add the require fla
 
 == Running asciibuild
 
-In a stock Asciidoctor file, this won't do anything other than process the `.adoc` into your preferred backend (`html` by default). If you want `asciibuild` to EVAL your listing blocks, just add a style to them of `[asciibuild,{lang}]`, where `lang` is either one of the built-in supported languages, or an executable that accepts input on `<STDIN>`.
+In a stock Asciidoctor file, this won't do anything other than process the `.adoc` into a file in the `abuild/` directory using your preferred backend (`html` by default). If you want `asciibuild` to EVAL your listing blocks, just add a style to them that conforms to the pattern `[asciibuild,{lang}]`, where `lang` is either one of the built-in supported languages, or an executable that accepts input on `STDIN`. `asciibuild` will create a process based on the name of the interpreter in use (e.g. `python`) and pipe the content of the listing block into the process via `STDIN`. Any output (STD or ERR) is captured and written to the result document in the `abuild/` directory.
 
 [source,bash]
 ----
 asciibuild build.adoc
+
+... output ...
+
+open abuild/build.html
 ----
 
 Currently, the built-in supported languages are described in the following list. Required settings are listed with `{attribute}` where the value must go and optional attributes are listed with their default settings.

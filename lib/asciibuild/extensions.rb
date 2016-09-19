@@ -162,6 +162,13 @@ module Asciibuild
       end
 
       def process parent, reader, attrs
+        lang = get_lang attrs[2]
+        doctitle = parent.document.attributes['doctitle']
+        if not attrs['title']
+          attrs['title'] = lang
+        end
+        attrs['original_title'] = attrs['title']
+
         if not include_section?(parent, attrs)
           if parent.document.attributes["error"]
             puts "Section \"#{parent.title}\" skipped due to previous error."
@@ -175,8 +182,6 @@ module Asciibuild
           return create_open_block parent, ["[source,#{lang}]", "----"] + reader.lines + ["----"], attrs
         end
 
-        doctitle = parent.document.attributes["doctitle"]
-        attrs['original_title'] = attrs['title']
         body = Mustache.render(reader.read, parent.document.attributes)
 
         lines = []
@@ -197,16 +202,17 @@ module Asciibuild
           "pyspark #{attrs['spark_opts']}"
         when 'spark-shell'
           "spark-shell #{attrs['spark_opts']}"
+        when 'bash'
+          "bash -exs #{attrs['bash_opts']}"
         else
-          if attrs['container']
-            name = if attrs['container'] == 'true' then doctitle else attrs['container'] end
-            container_id = parent.document.attributes["#{name} container"]
-            "docker exec -i #{container_id} #{attrs['exec_opts']} #{attrs[2]}"
-          else
-            attrs[2]
-          end
+          attrs[2]
         end
-        lang = get_lang attrs[2]
+        # Check to see if we run inside a container
+        if attrs['container']
+          name = if attrs['container'] == 'true' then doctitle else attrs['container'] end
+          container_id = parent.document.attributes["#{name} container"]
+          cmd = "docker exec -i #{container_id} #{attrs['exec_opts']} #{cmd}"
+        end
 
         lines = ["[source,#{lang}]", "----", body, "", "----"]
 

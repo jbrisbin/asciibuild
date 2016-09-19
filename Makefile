@@ -11,8 +11,8 @@ clean:
 
 gem: clean asciibuild.gemspec $(SRC)
 	gem build ./asciibuild.gemspec
-	gem install ./asciibuild-*.gem
-	
+	gem install ./asciibuild-*.gem -l
+
 install: clean asciibuild.gemspec $(SRC)
 	bundle install
 
