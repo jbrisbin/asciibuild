@@ -10,14 +10,19 @@ def include_section? parent, attrs
     []
   end
 
+  deps = []
+
   incl_sect = sections.empty?
   sections.each do |s|
-    if not incl_sect and Regexp.new(s) =~ parent.title
-      incl_sect = true
+    if not incl_sect
+      if Regexp.new(s) =~ parent.title
+        incl_sect = true
+        deps << "Before " + parent.title << "After " + parent.title
+      end
     end
   end
 
-  incl_sect or (not parent.document.attributes["error"] and (/^Before/ =~ parent.title or /^After/ =~ parent.title))
+  incl_sect or deps.include?(parent.title) or (not parent.document.attributes["error"])
 end
 
 def get_lang lang
@@ -182,7 +187,11 @@ module Asciibuild
           return create_open_block parent, ["[source,#{lang}]", "----"] + reader.lines + ["----"], attrs
         end
 
-        body = Mustache.render(reader.read, parent.document.attributes)
+        body = if not attrs['template'] == 'false'
+          Mustache.render(reader.read, parent.document.attributes)
+        else
+          reader.read
+        end
 
         lines = []
         stderr_lines = []

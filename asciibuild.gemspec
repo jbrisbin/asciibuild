@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name           = 'asciibuild'
-  s.version        = '0.2.0'
+  s.version        = '0.3.0'
   s.date           = '2016-09-08'
   s.summary        = "Process orchestrator based on Asciidoc"
   s.description    = "Orchestrate and document processes by inlining executable code into an Asciidoc document"

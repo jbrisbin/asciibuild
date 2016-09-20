@@ -7,7 +7,7 @@ SRC = $(shell find lib -name *.rb -print) bin/asciibuild
 
 clean:
 	rm -Rf *.gem vendor *.log metastore_db Dockerfile Gemfile.lock abuild
-	gem uninstall -x asciibuild
+	gem uninstall -ax asciibuild
 
 gem: clean asciibuild.gemspec $(SRC)
 	gem build ./asciibuild.gemspec
