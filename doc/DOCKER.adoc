@@ -1,8 +1,6 @@
-= Docker Support
+== Creating and Building Docker containers
 
 `asciibuild` has out-of-the-box support for creating, manipulating, and executing code inside of Docker containers.
-
-== Creating and Building Docker containers
 
 `asciibuild` can build and run a Docker container if you add the style `[asciibuild,Dockerfile,image={tag}]` to a listing block. Only the named attribute `image` is required. It must contain a valid Docker image name that will be used as the `-t` parameter to the `docker build` command. To create a Docker image, place either the full content of a `Dockerfile` into the listing block, or include partial content using http://asciidoctor.org/docs/user-manual/#include-directive[Asciidoctor include]. Examples can be found in the link:../test/test-block-processor.adoc#alpine[test .adoc file].
 

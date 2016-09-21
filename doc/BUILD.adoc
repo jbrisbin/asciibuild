@@ -1,5 +1,3 @@
-= Building
-
 [[gem]]
 == Building with gem
 

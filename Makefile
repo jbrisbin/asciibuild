@@ -17,6 +17,6 @@ install: clean asciibuild.gemspec $(SRC)
 	bundle install
 
 test: install
-	bundle exec asciibuild -a run=$(RUN) -a greeting $(OPTS) test/test-block-processor.adoc
+	bundle exec asciibuild -a run=$(RUN) -a greeting $(OPTS) -r Linux test/test-block-processor.adoc
 
 all: install

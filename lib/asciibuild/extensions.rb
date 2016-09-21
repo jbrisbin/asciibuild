@@ -4,6 +4,12 @@ require 'open3'
 require 'mustache'
 
 def include_section? parent, attrs
+  if parent.document.attributes["error"]
+    return false
+  elsif parent.title == "Before All" or parent.title == "After All"
+    return true
+  end
+
   sections = if parent.document.attributes["sections"]
     parent.document.attributes["sections"].split(/,[ ]*/)
   else
@@ -22,7 +28,7 @@ def include_section? parent, attrs
     end
   end
 
-  incl_sect or deps.include?(parent.title) or (not parent.document.attributes["error"])
+  incl_sect or deps.include?(parent.title)
 end
 
 def get_lang lang
@@ -42,6 +48,28 @@ def write_file attrs, default_name, body
   open(name, mode) do |f|
     f.write(body + "\n")
   end
+end
+
+def normalize parent, attrs, lines
+  redact = parent.document.attributes['redact']
+  patts = if redact
+    if redact.class == Array
+      redact
+    else
+      [redact]
+    end
+  else
+    []
+  end
+
+  new_lines = []
+  lines.each do |l|
+    patts.each do |p|
+      l = l.gsub(Regexp.new(p), "[****]")
+    end
+    new_lines << l.gsub(/\e\[([;\d]+)?m/, '') # Sneak in ANSI color stripping here as well
+  end
+  new_lines
 end
 
 module Asciibuild
@@ -136,7 +164,6 @@ module Asciibuild
       #
       # If using a language like BASH or Python, the language's interpreter should accept `STDIN` as
       # input and be found in the `PATH`.
-
 
       use_dsl
       named :asciibuild
@@ -270,7 +297,7 @@ module Asciibuild
           attrs['title'] = 'icon:check-circle[role=green] ' + attrs['title']
         end
 
-        after_end cmd, parent, lines, attrs
+        after_end cmd, parent, normalize(parent, attrs, lines), attrs
       end
 
     end

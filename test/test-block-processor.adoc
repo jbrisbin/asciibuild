@@ -12,7 +12,7 @@ Jon Brisbin <jbrisbin@basho.com>
 * image = {image}
 * run = {run}
 
-== Before Build
+== Before All
 
 This defines the environment this build will run in. This always gets run.
 
@@ -177,7 +177,7 @@ include::build-essential.Dockerfile[tags=alpine;common]
 CMD /bin/sh
 ----
 
-== After Build
+== After All
 
 This defines what happens after the build. This always gets run.
 

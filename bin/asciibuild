@@ -41,6 +41,13 @@ OptionParser.new do |opts|
       attrs[k] = v
     end
   end
+  opts.on('-r', '--redact PATT', 'Regex pattern of text to redact from output and replace with [****]') do |r|
+    if not attrs['redact']
+      attrs['redact'] = [r]
+    else
+      attrs['redact'] << r
+    end
+  end
 end.parse!
 
 ARGV.each do |f|

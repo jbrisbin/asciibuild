@@ -1,8 +1,6 @@
-= Usage
+== Running asciibuild
 
 To use `asciibuild` on your Asciidoctor files, make sure you add the require flag to your invocation of `asciidoctor` or just use the `asciibuild` executable that was insalled with the gem.
-
-== Running asciibuild
 
 In a stock Asciidoctor file, this won't do anything other than process the `.adoc` into a file in the `abuild/` directory using your preferred backend (`html` by default). If you want `asciibuild` to EVAL your listing blocks, just add a style to them that conforms to the pattern `[asciibuild,{lang}]`, where `lang` is either one of the built-in supported languages, or an executable that accepts input on `STDIN`. `asciibuild` will create a process based on the name of the interpreter in use (e.g. `python`) and pipe the content of the listing block into the process via `STDIN`. Any output (STD or ERR) is captured and written to the result document in the `abuild/` directory.
 
@@ -39,6 +37,8 @@ To use a `bash` or `sh` shell, add the `[asciibuild,bash]` or `[asciibuild,sh]` 
 echo Hello `uname -s`
 ----
 ....
+
+NOTE: Default options when using bash are `-exs`. If you want to add https://www.gnu.org/software/bash/manual/html_node/Invoking-Bash.html[additional options] add an attribute of `bash_opts=""` to the `[asciibuild]` style.
 
 == Using Spark
 
@@ -93,9 +93,11 @@ image:asciibuild_error.jpg[Error in Asciibuild]
 
 == Advanced Usage
 
-It's possible to execute only a given set of blocks in an `asciibuild` document by setting the document attribute `sections` to a comma-separate list of regexes that will match section titles that should be executed. If a section title does not match one of these regexes, it will be marked in the resulting document as "skipped" with a yellow pause icon, as in the following example and screenshot.
+It's possible to execute only a given set of blocks in an `asciibuild` document by setting the document attribute `sections` to a comma-separated list of regexes that will match section titles that should be executed. If a section title does not match one of these regexes, it will be marked in the resulting document as "skipped" with a yellow pause icon, as in the following example and screenshot.
 
-NOTE: Any section that starts with the name "Before" or "After" will *always* be run, regardless of the setting of `sections`. This is to provide setup and cleanup functionality.
+Any section that starts with the name "Before All" or "After All" will *always* be run, regardless of the setting of `sections`. This is to provide setup and cleanup functionality. To get before and after functionality for a specific section, use a title like "Before My Section" and "After My Section". If you tell asciibuild to only execute "My Section", then it will *also* execute the "Before" and "After" sections as well.
+
+NOTE: The fact that they are named "Before" and "After" is a semantic convenience only. Sections are executed in the order in which they appear in the document.
 
 .Execute only One Section
 [source,bash]
@@ -104,3 +106,35 @@ asciibuild -a sections="Test Bash" test/test-block-processor.adoc
 ----
 
 image:asciibuild_skipped.jpg[Section Skipped]
+
+=== Skipping Mustache Processing
+
+If you want to entirely skip the processing of listing block text through the https://mustache.github.io/[Mustache template library], add an attribute to the listing block of `template=false`. This is helpful if you want to use things like Go templates, which use the same delimiters as Mustache templates.
+
+[listing]
+[source,asciidoc]
+....
+.Execute Docker in asciibuild
+[source,bash]
+[asciibuild,bash,template=false]
+----
+docker inspect -q -f '{{.NetworkSettings.IPAddress}}' my-container
+----
+....
+
+If you want to use Go and Mustache templates in the same listing block, you can. You just have to set the Mustache delimiter to something other than `{{ }}`.
+
+[listing]
+[source,asciidoc]
+....
+:my_container: my-container
+
+.Execute Docker in asciibuild
+[source,bash]
+[asciibuild,bash,template=false]
+----
+# Reset Mustache tags since they conflict with Go templates
+# {{=<% %>=}}
+docker inspect -q -f '{{.NetworkSettings.IPAddress}}' <% my_container %>
+----
+....
