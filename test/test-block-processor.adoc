@@ -167,6 +167,17 @@ docker build -t asciibuild-concat .
 [ "Hello World" == "$(docker run asciibuild-concat)" ]
 ----
 
+=== Test Enable Disable
+
+This block should fail if asciibuild is run.
+
+.Disabled Block doesn't run
+[source,bash]
+[asciibuild,bash,enabled=false]
+----
+[ "true" == "false" ]
+----
+
 === Test Dockerfile include
 
 .Include Alpine Content

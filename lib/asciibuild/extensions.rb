@@ -37,6 +37,8 @@ def get_lang lang
     'python'
   when 'spark-shell'
     'scala'
+  when 'docker-compose'
+    'yaml'
   else
     lang
   end
@@ -48,6 +50,7 @@ def write_file attrs, default_name, body
   open(name, mode) do |f|
     f.write(body + "\n")
   end
+  name
 end
 
 def normalize parent, attrs, lines
@@ -201,10 +204,12 @@ module Asciibuild
         end
         attrs['original_title'] = attrs['title']
 
-        if not include_section?(parent, attrs)
+        if not include_section?(parent, attrs) or parent.document.attributes["enabled"] == "false" or attrs["enabled"] == "false"
           if parent.document.attributes["error"]
             puts "Section \"#{parent.title}\" skipped due to previous error."
             attrs['title'] = 'icon:pause-circle[role=red] ' + attrs['title'] + " (previous error)"
+          elsif parent.document.attributes["enabled"] == "false" or attrs["enabled"] == "false"
+            puts "Section \"#{parent.title}\" not enabled."
           else
             sections = parent.document.attributes["sections"].split(/,[ ]*/)
             puts "Section \"#{parent.title}\" skipped. Does not match #{sections}."
@@ -224,24 +229,30 @@ module Asciibuild
         stderr_lines = []
 
         cmd = case attrs[2]
+        when 'bash'
+          "bash -exs #{attrs['bash_opts']}"
         when 'Dockerfile'
           if not attrs['image']
             raise 'Missing image name. Add attribute of image={name} to the [asciibuild,Dockerfile] style.'
           end
-          fname = attrs['file'] ||= 'Dockerfile'
-          write_file attrs, 'Dockerfile', body
+          fname = write_file attrs, 'Dockerfile', body
           "docker build -t #{attrs['image']} #{attrs['build_opts']} -f #{fname} ."
+        when 'docker-compose'
+          dc_cmd = attrs['command'] ||= 'build'
+          fname = write_file attrs, 'docker-compose.yml', body
+          "docker-compose -f #{fname} #{compose_opts} #{dc_cmd}"
         when 'erlang'
-          write_file attrs, 'escript.erl', body
-          "escript #{name} #{attrs['escript_opts']}"
+          fname = write_file attrs, 'escript.erl', body
+          "escript #{fname} #{attrs['escript_opts']}"
+        when 'Makefile'
+          "make -f - #{attrs['make_opts']} #{attrs['target']}"
         when 'pyspark'
           "pyspark #{attrs['spark_opts']}"
         when 'spark-shell'
           "spark-shell #{attrs['spark_opts']}"
-        when 'bash'
-          "bash -exs #{attrs['bash_opts']}"
         else
-          attrs[2]
+          opts = attrs["#{attrs[2]}_opts"]
+          "#{attrs[2]} #{opts}"
         end
         # Check to see if we run inside a container
         if attrs['container']
@@ -274,7 +285,7 @@ module Asciibuild
             lines << line.chomp
           end
           while line=stderr.gets do
-            puts line
+            STDERR.puts line
             stderr_lines << line.chomp
           end
 
@@ -299,7 +310,6 @@ module Asciibuild
 
         after_end cmd, parent, normalize(parent, attrs, lines), attrs
       end
-
     end
 
     Asciidoctor::Extensions.register do

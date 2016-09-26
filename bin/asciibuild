@@ -26,6 +26,12 @@ options = {
 OptionParser.new do |opts|
   opts.banner = "Usage: asciibuild [options] file.adoc..."
 
+  opts.on('-d', '--outdir DIR', 'Directory to output processed documents to') do |d|
+    options[:to_dir] = d
+  end
+  opts.on('-e', '--enabled ENABLED', 'Enable or disable asciibuild entirely') do |e|
+    attrs["enabled"] = e
+  end
   opts.on('-s', '--stylesheet NAME', 'Stylesheet name') do |v|
     attrs["stylesheet"] = find_stylesheet(v)
   end
@@ -56,7 +62,8 @@ ARGV.each do |f|
   basedir = File.join options[:to_dir], dirname
   options[:to_dir] = basedir
   attrs["outdir"] = basedir
-  options[:to_file] = "#{basename}-#{Time.now.getutc.to_i}.html"
+  outfile = "#{basename}-#{Time.now.getutc.to_i}.html"
+  options[:to_file] = outfile
 
   Asciidoctor.convert_file f, options
 end
