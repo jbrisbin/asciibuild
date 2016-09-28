@@ -1,6 +1,8 @@
 == Running asciibuild
 
-To use `asciibuild` on your Asciidoctor files, make sure you add the require flag to your invocation of `asciidoctor` or just use the `asciibuild` executable that was insalled with the gem.
+If you've already link:BUILD.adoc[installed the gem as described in the BUILD document], read on.
+
+To use `asciibuild` on your Asciidoctor files, make sure you add the require flag to your invocation of `asciidoctor` or just use the `asciibuild` executable that was installed with the gem.
 
 In a stock Asciidoctor file, this won't do anything other than process the `.adoc` into a file in the `abuild/` directory using your preferred backend (`html` by default). If you want `asciibuild` to EVAL your listing blocks, just add a style to them that conforms to the pattern `[asciibuild,{lang}]`, where `lang` is either one of the built-in supported languages, or an executable that accepts input on `STDIN`. `asciibuild` will create a process based on the name of the interpreter in use (e.g. `python`) and pipe the content of the listing block into the process via `STDIN`. Any output (STD or ERR) is captured and written to the result document in the `abuild/` directory.
 

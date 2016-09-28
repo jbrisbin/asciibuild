@@ -1,3 +1,13 @@
+== Installing the gem
+
+`asciibuild` is available on Ruby Gems by just installing from the internet:
+
+.Install with gem
+[source,bash]
+----
+gem install asciibuild
+----
+
 [[gem]]
 == Building with gem
 
@@ -6,6 +16,8 @@
 .Build and Install with make
 [source,bash]
 ----
+git clone git@github.com:jbrisbin/asciibuild.git
+cd asciibuild
 make gem
 ----
 
