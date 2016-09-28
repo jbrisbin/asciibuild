@@ -169,7 +169,7 @@ docker build -t asciibuild-concat .
 
 === Test Enable Disable
 
-This block should fail if asciibuild is run.
+This block should fail if asciibuild is run and `enabled` isn't `false`.
 
 .Disabled Block doesn't run
 [source,bash]

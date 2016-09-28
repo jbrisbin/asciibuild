@@ -9,6 +9,7 @@ end
 attrs = {
   "pwd" => Dir.pwd,
   "toc" => "left",
+  "toclevels" => "4",
   "sectlinks" => true,
   "icons" => "font",
   "stylesheet" => find_stylesheet("colony"),
@@ -28,9 +29,6 @@ OptionParser.new do |opts|
 
   opts.on('-d', '--outdir DIR', 'Directory to output processed documents to') do |d|
     options[:to_dir] = d
-  end
-  opts.on('-e', '--enabled ENABLED', 'Enable or disable asciibuild entirely') do |e|
-    attrs["enabled"] = e
   end
   opts.on('-s', '--stylesheet NAME', 'Stylesheet name') do |v|
     attrs["stylesheet"] = find_stylesheet(v)
@@ -66,4 +64,9 @@ ARGV.each do |f|
   options[:to_file] = outfile
 
   Asciidoctor.convert_file f, options
+
+end
+
+if Asciibuild::Extensions.failed
+  exit 1
 end

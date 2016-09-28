@@ -77,6 +77,16 @@ end
 
 module Asciibuild
   module Extensions
+    @failed = false
+
+    def self.failed
+      @failed
+    end
+
+    def self.failed=(f)
+      @failed = f
+    end
+
     class ConcatBlock < Asciidoctor::Extensions::BlockProcessor
       # BlockProcessor to concatenate content into a single file.
       # It allows you to break up sections of a file into separate listing blocks and aggregate them together
@@ -189,7 +199,7 @@ module Asciibuild
           if status == 0
             parent.document.attributes["#{name} container"] = rout.chomp
           else
-            parent.document.attributes["error"] = true
+            Asciibuild::Extensions.failed = true
           end
           lines << "----" << "> #{docker_run}" << rout << rerr << "----"
         end
@@ -302,7 +312,7 @@ module Asciibuild
 
         if status != 0
           lines << "IMPORTANT: #{cmd} failed with #{status}"
-          parent.document.attributes["error"] = true
+          Asciibuild::Extensions.failed = true
           attrs['title'] = 'icon:exclamation-circle[role=red] ' + attrs['title']
         else
           attrs['title'] = 'icon:check-circle[role=green] ' + attrs['title']
