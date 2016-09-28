@@ -12,18 +12,27 @@ asciibuild build.adoc
 
 ... output ...
 
-open abuild/build.html
+open abuild/
 ----
 
 Currently, the built-in supported languages are described in the following list. Required settings are listed with `{attribute}` where the value must go and optional attributes are listed with their default settings.
 
 .Supported languages
-* Any interpreter that accepts `<STDIN>` as input. Examples: `bash` and `python`.
+* Any interpreter that accepts `<STDIN>` as input. Examples: `bash`, `python`, or `ruby`.
+  - `[asciibuild, bash]`
+  - `[asciibuild, python]`
+  - `[asciibuild, ruby]`
 * Docker
-  - `[asciibuild, Dockerfile, image={name}, file=Dockerfile, overwrite=true, run=false, build_opts="", run_opts=""]` _For more on using the Docker support, visit the link:DOCKER.adoc[DOCKER] document_
+  - `[asciibuild, Dockerfile, image={name}, file="Dockerfile", overwrite=true, run=false, build_opts="", run_opts=""]` _For more on using the Docker support, visit the link:DOCKER.adoc[DOCKER] document_
+* docker-compose
+  - `[asciibuild, docker-compose, command=build, compose_opts="", file="docker-compose.yml"]`
+* Erlang (via `escript`)
+  - `[asciibuild, erlang, escript_opts="", file="escript.erl"]`
+* Makefile
+  - `[ascibuild, Makefile, target="", make_opts="", file="Makefile"]`
 * Spark
-  - Scala: `[asciibuild, spark-shell]`
-  - Python: `[asciibuild, pyspark]`
+  - Scala: `[asciibuild, spark-shell, spark_opts=""]`
+  - Python: `[asciibuild, pyspark, spark_opts=""]`
 
 == Using Shell
 

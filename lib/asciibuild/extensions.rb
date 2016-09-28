@@ -250,7 +250,7 @@ module Asciibuild
         when 'docker-compose'
           dc_cmd = attrs['command'] ||= 'build'
           fname = write_file attrs, 'docker-compose.yml', body
-          "docker-compose -f #{fname} #{compose_opts} #{dc_cmd}"
+          "docker-compose -f #{fname} #{attrs['compose_opts']} #{dc_cmd}"
         when 'erlang'
           fname = write_file attrs, 'escript.erl', body
           "escript #{fname} #{attrs['escript_opts']}"
