@@ -75,6 +75,15 @@ def normalize parent, attrs, lines
   new_lines
 end
 
+def wait_for_container cid
+  cmd = "docker inspect -f {{.State.Running}} %s" % cid
+  cout, cerr, cstatus = Open3.capture3(cmd)
+  until cstatus != 0 or cout.chomp == "true" do
+    sleep 0.1
+    cout, cerr, cstatus = Open3.capture3(cmd)
+  end
+end
+
 module Asciibuild
   module Extensions
     @failed = false
@@ -197,7 +206,9 @@ module Asciibuild
           rout, rerr, status = Open3.capture3(docker_run)
           puts rout, rerr
           if status == 0
-            parent.document.attributes["#{name} container"] = rout.chomp
+            cid = rout.chomp
+            wait_for_container cid
+            parent.document.attributes["#{name} container"] = cid
           else
             Asciibuild::Extensions.failed = true
           end
@@ -254,6 +265,9 @@ module Asciibuild
         when 'erlang'
           fname = write_file attrs, 'escript.erl', body
           "escript #{fname} #{attrs['escript_opts']}"
+        when 'elixir'
+          fname = write_file attrs, 'elixir.exs', body
+          "elixir -r Logger -pa ebin -pa 'deps/*/ebin' #{attrs['elixir_opts']} #{fname}"
         when 'Makefile'
           "make -f - #{attrs['make_opts']} #{attrs['target']}"
         when 'pyspark'
